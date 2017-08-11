@@ -1,0 +1,134 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link href="css/bootstrap-3.1.1.min.css" rel="stylesheet" />
+    <link href="Scripts/DataTables/media/css/jquery.dataTables.css" rel="stylesheet" />
+
+    <script src="Scripts/jquery-3.1.1.min.js"></script>
+    <script src="Scripts/bootstrap.min.js"></script>
+    <script src="Scripts/DataTables/media/js/jquery.dataTables.min.js"></script>
+
+
+    <title>Results</title>
+</head>
+<body>
+    <div class="container">
+        <h1 class="header">Results</h1>
+        <input placeholder="Search for an item" id="searchInput" class="textbox" />
+        <button id="newSearch">Go</button>
+        <div>
+            <table class="table table-bordered table-striped" id="finalResults">
+                <thead>
+                    <tr>
+                        <th>Site</th>
+                        <th>Average Price</th>
+                        <th>Link</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+                <tfoot></tfoot>
+            </table>
+        </div>
+        <div id="results">
+
+
+        </div>
+    </div>
+    <script>
+        var ebayResults;
+        $('#newSearch').click(function () {
+            var searchParms = $('#searchInput').val();
+            if (searchParms === ""){
+            }
+            else {
+                var url = "http://svcs.ebay.com/services/search/FindingService/v1";
+                url += "?OPERATION-NAME=findCompletedItems";
+                url += "&SERVICE-VERSION=1.13.0";
+                url += "&SECURITY-APPNAME=PhilipBa-CompareG-PRD-2cd409a1e-5eb3e86b";
+                url += "&GLOBAL-ID=EBAY-US";
+                url += "&RESPONSE-DATA-FORMAT=JSON";
+                url += "&callback=_cb_findItemsByKeywords";
+                url += "&REST-PAYLOAD";
+                url += "&keywords=" + searchParms + " -lot -not working";
+                //item filters
+                url += "&itemFilter.name=SoldItemsOnly&itemFilter.value=true"
+                url += "&sortOrder=EndTimeSoonest"
+                url += "&paginationInput.entriesPerPage=10";
+                s = document.createElement('script'); // create script element
+                s.src = url;
+                document.body.appendChild(s);
+            }
+
+          
+        });
+        var finalResults = $('#finalResults').DataTable({
+        });
+        // Construct the request
+        // Replace MyAppID with your Production AppID
+       
+        // Submit the request
+       
+        // Parse the response and build an HTML table to display search results
+        function _cb_findItemsByKeywords(root) {
+            ebayResults = [];
+            var items = root.findCompletedItemsResponse[0].searchResult[0].item || [];
+            var html = [];
+            var shippingCost = 0;
+            html.push('<table class="table table-bordered"><tbody>');
+            for (var i = 0; i < items.length; ++i) {
+                var item = items[i];
+                var title = item.title;
+                var pic = item.galleryURL;
+                var value = item.sellingStatus[0].currentPrice[0].__value__;
+                if (item.shippingInfo[0].shippingType[0] === "Flat") {
+                    shippingCost = item.shippingInfo[0].shippingServiceCost[0].__value__;
+                }
+                else if (item.shippingInfo[0].shippingType[0] === "Free") {
+                    shippingCost = 0;
+                }
+                else {
+                    shippingCost = 3.99;
+                }
+               
+                var totalCost = parseFloat(value) + parseFloat(shippingCost);
+                totalCost = totalCost.toFixed(2);
+                ebayResults.push(totalCost);
+                var viewitem = item.viewItemURL;
+                if (null != title && null != viewitem) {
+                    html.push('<tr><td>' + '<img src="' + pic + '" border="0">' + '</td>' + '<td>' + totalCost + "</td>" +
+                    '<td><a href="' + viewitem + '" target="_blank">' + title + '</a></td></tr>');
+                }
+            }
+            html.push('</tbody></table>');
+            document.getElementById("results").innerHTML = html.join("");
+            getResults();
+
+        }  // End _cb_findItemsByKeywords() function
+
+        function getResults() {
+            var dataSet = [];
+            var sum = 0;
+            for (var i = 0; i < ebayResults.length; i++) {
+                sum += parseInt(ebayResults[i], 10); //don't forget to add the base
+            }
+            var avg = sum / ebayResults.length;
+            var valueToPush = {};
+            valueToPush["site"] = "Ebay";
+            valueToPush["price"] = avg;
+            valueToPush["Link"] = "http://www.ebay.com/sch/i.html?_from=R40&_sacat=0&_nkw=" + $('#searchInput').val() + "&LH_Complete=1&rt=1&LH_Sold=1&rt=nc&_trksid=p2045573.m1684";
+            dataSet.push(valueToPush);
+            for (var i = 0; i < dataSet.length; i++)
+            finalResults.row.add({
+                "name": "Tiger Nixon",
+                "position": "System Architect",
+                "salary": "$3,120",
+                "start_date": "2011/04/25",
+                "office": "Edinburgh",
+                "extn": "5421"
+            }).draw();
+
+        }
+
+    </script>
+</body>
+</html>
